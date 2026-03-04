@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>배 내부 물 마스킹 가이드</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: #0f1117;
+    color: #e0e0e0;
+    line-height: 1.7;
+    padding: 40px 20px;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #60a5fa;
+    margin-bottom: 8px;
+    border-bottom: 2px solid #1e3a5f;
+    padding-bottom: 12px;
+  }
+
+  h1 span { font-size: 1.4rem; }
+
+  .subtitle {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    margin-bottom: 36px;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #38bdf8;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-left: 12px;
+    border-left: 4px solid #38bdf8;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #7dd3fc;
+    margin-top: 28px;
+    margin-bottom: 10px;
+  }
+
+  p, li {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+  }
+
+  ol, ul {
+    padding-left: 24px;
+    margin-bottom: 16px;
+  }
+
+  li { margin-bottom: 6px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px 0;
+    background: #1a1d27;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  thead th {
+    background: #1e293b;
+    color: #93c5fd;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    border-bottom: 2px solid #334155;
+  }
+
+  tbody td {
+    padding: 9px 14px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #252a36;
+    color: #d1d5db;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #1f2535; }
+
+  .val { color: #fbbf24; font-weight: 600; font-family: 'Consolas', monospace; }
+  code {
+    background: #262b38;
+    color: #a5f3fc;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 0.88rem;
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+
+  .box {
+    background: #151820;
+    border: 1px solid #2a3040;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+
+  .box-blue {
+    border-left: 4px solid #3b82f6;
+    background: #111827;
+  }
+
+  .box-yellow {
+    border-left: 4px solid #f59e0b;
+    background: #1a1708;
+  }
+
+  .box-green {
+    border-left: 4px solid #22c55e;
+    background: #0a1a10;
+  }
+
+  .box-label {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .box-blue .box-label { color: #60a5fa; }
+  .box-yellow .box-label { color: #fbbf24; }
+  .box-green .box-label { color: #4ade80; }
+
+  .step-num {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    text-align: center;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #fff;
+    font-weight: 700;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+
+  .step-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+
+  .diagram {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'Consolas', monospace;
+    font-size: 0.85rem;
+    color: #8b949e;
+    white-space: pre;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+
+  .diagram em { color: #58a6ff; font-style: normal; }
+  .diagram strong { color: #f0883e; font-weight: normal; }
+
+  hr {
+    border: none;
+    border-top: 1px solid #252a36;
+    margin: 36px 0;
+  }
+
+  .feature-card {
+    background: #1a1d27;
+    border: 1px solid #2a3040;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin: 12px 0;
+  }
+
+  .feature-card h4 {
+    color: #93c5fd;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .troubleshoot td:first-child {
+    color: #f87171;
+    font-weight: 600;
+  }
+
+  .hierarchy {
+    font-family: 'Consolas', monospace;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    color: #94a3b8;
+  }
+
+  .hierarchy strong { color: #fbbf24; }
+  .hierarchy em { color: #4ade80; font-style: normal; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🌊 배 내부 물 마스킹 가이드</h1>
+  <p class="subtitle">배가 반쯤 잠길 때 물 메쉬가 배 안까지 보이는 문제를 해결합니다</p>
+
+  <!-- ==================== 원리 ==================== -->
+  <div class="box box-blue">
+    <div class="box-label">💡 원리</div>
+    <p>배 안에 <strong>보이지 않는 Quad 메쉬</strong>를 깔아둡니다. 이 메쉬가 Stencil Buffer에 "여기는 물 그리지 마"라고 표시하면, 물 셰이더가 해당 영역을 건너뜁니다.</p>
+  </div>
+
+  <div class="diagram">     <em>측면도 (Side View)</em>
+
+  ~~~~~~수면~~~~~~~~~수면~~~~~~
+       ┌──────────────┐
+  ~~~~~│ <strong>물이 보임!</strong>  │~~~~~~~~~   ← 이 부분을 마스킹
+       │   배 내부    │
+  ─────┴──────────────┴─────────</div>
+
+  <hr>
+
+  <!-- ==================== STEP 1 ==================== -->
+  <div class="step-header"><span class="step-num">1</span> Layer 생성</div>
+
+  <p><code>Edit &gt; Project Settings &gt; Tags and Layers</code> 로 이동합니다.</p>
+  <p>빈 슬롯에 아래 2개 Layer를 추가합니다.</p>
+
+  <table>
+    <thead><tr><th>슬롯</th><th>이름</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>빈 슬롯</td><td class="val">WaterMask</td><td>마스크 메쉬용 (새로 생성)</td></tr>
+      <tr><td>빈 슬롯</td><td class="val">Water</td><td>이미 있으면 스킵</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ==================== STEP 2 ==================== -->
+  <div class="step-header"><span class="step-num">2</span> Material 생성</div>
+
+  <ol>
+    <li>Project 창에서 우클릭 &gt; <code>Create &gt; Material</code></li>
+    <li>이름: <code>WaterMask_Mat</code></li>
+    <li>Inspector 상단의 Shader 드롭다운 클릭</li>
+    <li><code>Custom &gt; WaterMask</code> 선택</li>
+  </ol>
+
+  <div class="box box-yellow">
+    <div class="box-label">📁 셰이더 파일 위치</div>
+    <p><code>Stylized Water Shader/Shaders/WaterMask.shader</code></p>
+  </div>
+
+  <hr>
+
+  <!-- ==================== STEP 3 ==================== -->
+  <div class="step-header"><span class="step-num">3</span> 마스크 메쉬 배치</div>
+
+  <h3>3-1. Quad 생성</h3>
+  <ol>
+    <li>Hierarchy에서 <strong>배(Boat) 오브젝트</strong> 우클릭</li>
+    <li><code>3D Object &gt; Quad</code> 선택</li>
+    <li>이름을 <code>WaterMask</code> 로 변경</li>
+  </ol>
+
+  <h3>3-2. Transform 설정</h3>
+  <table>
+    <thead><tr><th>항목</th><th>값</th><th>설명</th></tr></thead>
+    <tbody>
+      <tr><td>Position X</td><td class="val">0</td><td>배 중앙</td></tr>
+      <tr><td>Position Y</td><td class="val">수면 높이에 맞춤</td><td>배 기준 로컬 Y</td></tr>
+      <tr><td>Position Z</td><td class="val">0</td><td>배 중앙</td></tr>
+      <tr><td>Rotation X</td><td class="val">90</td><td>Quad를 수평으로 눕힘</td></tr>
+      <tr><td>Scale X, Z</td><td class="val">배 내부 크기에 맞춤</td><td>넉넉하게, 배 밖으로 나가지 않게</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3-3. Material 적용</h3>
+  <p>WaterMask 오브젝트의 <code>Mesh Renderer &gt; Materials &gt; Element 0</code> 에 <strong>WaterMask_Mat</strong> 드래그</p>
+
+  <h3>3-4. Layer 변경</h3>
+  <table>
+    <thead><tr><th>오브젝트</th><th>Layer 설정</th></tr></thead>
+    <tbody>
+      <tr><td>WaterMask (마스크 Quad)</td><td class="val">WaterMask</td></tr>
+      <tr><td>Water Plane (물)</td><td class="val">Water</td></tr>
+    </tbody>
+  </table>
+
+  <div class="diagram">     <em>위에서 본 모습 (Top View)</em>
+
+     ┌──────────────────┐  ← 배 Hull
+     │  ┌────────────┐  │
+     │  │ <strong>WaterMask</strong>  │  │  ← Quad (배 내부에 맞춤)
+     │  │   (Quad)   │  │
+     │  └────────────┘  │
+     └──────────────────┘</div>
+
+  <hr>
+
+  <!-- ==================== STEP 4 ==================== -->
+  <div class="step-header"><span class="step-num">4</span> Renderer Feature 추가</div>
+
+  <p>프로젝트의 <strong>URP Renderer Asset</strong> 을 선택합니다.</p>
+
+  <div class="box box-yellow">
+    <div class="box-label">📍 찾는 방법</div>
+    <p><code>Edit &gt; Project Settings &gt; Graphics</code> 에서 연결된 Asset 클릭<br>
+    또는 <code>Stylized Water Shader/URP-HighFidelity-Renderer.asset</code> 사용</p>
+  </div>
+
+  <!-- Feature 1 -->
+  <div class="feature-card">
+    <h4>▶ Feature #1 — WaterMask_Write (마스크 기록)</h4>
+    <p>Inspector 하단 <code>Add Renderer Feature</code> &gt; <code>Render Objects</code></p>
+
+    <table>
+      <thead><tr><th>설정</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td>Name</td><td class="val">WaterMask_Write</td></tr>
+        <tr><td>Event</td><td class="val">Before Rendering Transparents</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Filters 섹션</strong></p>
+    <table>
+      <thead><tr><th>설정</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td>Queue</td><td class="val">Opaque</td></tr>
+        <tr><td>Layer Mask</td><td class="val">WaterMask 만 체크 ✓</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Overrides 섹션 &gt; ☑ Stencil 체크</strong></p>
+    <table>
+      <thead><tr><th>설정</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td>Value</td><td class="val">1</td></tr>
+        <tr><td>Compare Function</td><td class="val">Always</td></tr>
+        <tr><td>Pass</td><td class="val">Replace</td></tr>
+        <tr><td>Fail</td><td class="val">Keep</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Feature 2 -->
+  <div class="feature-card">
+    <h4>▶ Feature #2 — Water_StencilTest (물 마스킹)</h4>
+    <p>다시 <code>Add Renderer Feature</code> &gt; <code>Render Objects</code></p>
+
+    <table>
+      <thead><tr><th>설정</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td>Name</td><td class="val">Water_StencilTest</td></tr>
+        <tr><td>Event</td><td class="val">Before Rendering Transparents</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Filters 섹션</strong></p>
+    <table>
+      <thead><tr><th>설정</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td>Queue</td><td class="val">Transparent</td></tr>
+        <tr><td>Layer Mask</td><td class="val">Water 만 체크 ✓</td></tr>
+      </tbody>
+    </table>
+
+    <p><strong>Overrides 섹션 &gt; ☑ Stencil 체크</strong></p>
+    <table>
+      <thead><tr><th>설정</th><th>값</th></tr></thead>
+      <tbody>
+        <tr><td>Value</td><td class="val">1</td></tr>
+        <tr><td>Compare Function</td><td class="val">NotEqual</td></tr>
+        <tr><td>Pass</td><td class="val">Keep</td></tr>
+        <tr><td>Fail</td><td class="val">Keep</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr>
+
+  <!-- ==================== STEP 5 ==================== -->
+  <div class="step-header"><span class="step-num">5</span> 확인</div>
+
+  <ol>
+    <li>Play 모드 진입</li>
+    <li>배를 측면에서 바라보기</li>
+    <li>배 안에 물이 안 보이면 <strong>성공!</strong> 🎉</li>
+  </ol>
+
+  <hr>
+
+  <!-- ==================== 문제 해결 ==================== -->
+  <h2>🔧 문제 해결</h2>
+
+  <table class="troubleshoot">
+    <thead><tr><th>증상</th><th>확인할 것</th></tr></thead>
+    <tbody>
+      <tr><td>마스크가 안 됨</td><td>Layer 설정 확인 (WaterMask, Water)</td></tr>
+      <tr><td>물이 전부 사라짐</td><td>Renderer Feature의 Layer Mask가 정확한지 확인</td></tr>
+      <tr><td>배 밖 물도 잘림</td><td>마스크 Quad가 배 밖으로 튀어나가지 않게 크기 조절</td></tr>
+      <tr><td>특정 각도에서 깨짐</td><td>마스크 Quad의 Y 위치를 수면보다 살짝 위로 조정</td></tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <!-- ==================== Hierarchy ==================== -->
+  <h2>📦 최종 Hierarchy 구조</h2>
+
+  <div class="box box-green">
+    <div class="hierarchy">
+      📦 Boat (Root)<br>
+      &nbsp;├── 🔷 Hull (선체)<br>
+      &nbsp;├── 🔷 Deck (갑판)<br>
+      &nbsp;├── ◇ Effector1 (부력)<br>
+      &nbsp;├── ◇ Effector2 (부력)<br>
+      &nbsp;└── <strong>🟡 WaterMask (Quad)</strong> ← <em>Layer: WaterMask, Material: WaterMask_Mat</em>
+    </div>
+    <p style="margin-top:12px; color:#94a3b8; font-size:0.85rem;">배의 자식이므로 배가 움직이면 마스크도 같이 따라갑니다.</p>
+  </div>
+
+</div>
+</body>
+</html>
