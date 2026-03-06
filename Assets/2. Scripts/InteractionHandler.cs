@@ -7,6 +7,9 @@ public class InteractionHandler : MonoBehaviour
     public float interactionDistance = 3.0f; // 상호작용 가능한 최대 거리
     public LayerMask interactableLayer;      // 상호작용 가능한 오브젝트가 속한 레이어 (예: "Interactable")
 
+    [Header("보트 조종 설정")]
+    public string boatControllerObjectName = "BoatController"; // 조종 가능한 보트 오브젝트 이름
+
     // UI 텍스트 오브젝트 참조
     public TextMeshProUGUI interactionPromptText;
 
@@ -46,18 +49,44 @@ public class InteractionHandler : MonoBehaviour
                 // 현재 바라보고 있는 오브젝트가 상호작용 가능한 오브젝트라면
                 currentInteractableObject = hit.collider.gameObject;
 
-                // UI 텍스트 표시
-                if (interactionPromptText != null && !interactionPromptText.gameObject.activeSelf)
+                // 오브젝트 이름이 인스펙터에서 설정한 이름과 일치하는지 확인
+                if (currentInteractableObject.name == boatControllerObjectName)
                 {
-                    interactionPromptText.gameObject.SetActive(true);
-                }
+                    BoatController boatController = currentInteractableObject.GetComponentInParent<BoatController>();
+                    
+                    // 탑승 중이 아닐 때만 프롬프트 표시 및 상호작용 가능
+                    if (boatController != null && !boatController.IsPlayerBoarding())
+                    {
+                        // UI 텍스트 표시
+                        if (interactionPromptText != null && !interactionPromptText.gameObject.activeSelf)
+                        {
+                            interactionPromptText.gameObject.SetActive(true);
+                        }
 
-                // "E" 키를 눌렀는지 확인
-                if (Input.GetKeyDown(KeyCode.E))
+                        // "E" 키를 눌렀는지 확인
+                        if (Input.GetKeyDown(KeyCode.E))
+                        {
+                            Debug.Log("E 키로 보트 탑승! 대상: " + currentInteractableObject.name);
+                            boatController.BoardBoat();
+                            HideInteractionPrompt(); // 탑승 후 프롬프트 숨기기
+                        }
+                    }
+                    else if (boatController == null)
+                    {
+                        // 이름은 일치하지만 BoatController 컴포넌트가 없는 경우
+                        HideInteractionPrompt();
+                        Debug.LogWarning("대상 부모에 BoatController 컴포넌트가 없습니다.");
+                    }
+                    else
+                    {
+                        // 이미 탑승 중인 경우
+                        HideInteractionPrompt();
+                    }
+                }
+                else
                 {
-                    Debug.Log("E 키로 상호작용! 대상: " + currentInteractableObject.name);
-                    // 여기에 실제 낚시 시작, 이벤트 트리거 등의 로직을 추가합니다.
-                    // 예: currentInteractableObject.GetComponent<BoatInteractionScript>().StartFishing();
+                    // 이름이 일치하지 않는 다른 BoatPart일 경우
+                    HideInteractionPrompt();
                 }
             }
             else

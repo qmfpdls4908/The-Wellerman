@@ -6,6 +6,7 @@ public class BoatController : MonoBehaviour
     [Header("좌석 설정")]
     public Transform seatPosition;      // 플레이어가 앉을 조종석 위치
     public Transform exitPosition;      // 하차 시 플레이어가 이동할 위치
+    public Transform cameraPosition;    // 배 조종 시 카메라가 위치할 곳 (인스펙터에서 보기에 적합한 위치 지정)
 
     [Header("배 조종 설정")]
     public float boatSpeed = 10f;       // 배 전진/후진 속도
@@ -19,12 +20,24 @@ public class BoatController : MonoBehaviour
     // === 내부 상태 ===
     private bool isPlayerBoarding = false;  // 플레이어 탑승 상태
     private CharacterController playerCharacterController; // 플레이어 CharacterController
+    private float boardTime = 0f; // 탑승 시간 기록 (추가: 같은 프레임, 혹은 직후에 바로 내려지는 현상 방지)
+
+    private Transform mainCameraTransform; // 메인 카메라 Transform
+    private Transform originalCameraParent; // 내릴 때 카메라를 원래대로 돌려놓기 위한 원래 부모
+    private Vector3 originalCameraLocalPos; // 내릴 때 카메라를 원래대로 돌려놓기 위한 로컬 위치
+    private Quaternion originalCameraLocalRot; // 내릴 때 카메라를 원래대로 돌려놓기 위한 로컬 회전
 
     void Start()
     {
         if (playerTransform != null)
         {
             playerCharacterController = playerTransform.GetComponent<CharacterController>();
+        }
+
+        // 메인 카메라 찾기
+        if (Camera.main != null)
+        {
+            mainCameraTransform = Camera.main.transform;
         }
     }
 
@@ -54,12 +67,12 @@ public class BoatController : MonoBehaviour
         // 배 전진/후진 (배의 forward 방향)
         if (Mathf.Abs(verticalInput) > 0.01f)
         {
-            Vector3 forceDirection = transform.forward * verticalInput * boatSpeed;
+            Vector3 forceDirection = -transform.forward * verticalInput * boatSpeed;
             boatRigidbody.AddForce(forceDirection, ForceMode.Force);
         }
 
-        // E키로 하차
-        if (Input.GetKeyDown(KeyCode.E))
+        // E키로 하차 (탑승 후 약간의 딜레이를 주어 같은 프레임 입력 처리를 방지)
+        if (Input.GetKeyDown(KeyCode.E) && Time.time > boardTime + 0.1f)
         {
             ExitBoat();
         }
@@ -73,6 +86,7 @@ public class BoatController : MonoBehaviour
         if (isPlayerBoarding) return;
 
         isPlayerBoarding = true;
+        boardTime = Time.time; // 탑승한 정확한 시간을 기록
 
         // 1. 플레이어 이동 비활성화
         if (playerMovement != null)
@@ -97,6 +111,20 @@ public class BoatController : MonoBehaviour
         if (playerTransform != null)
         {
             playerTransform.SetParent(transform);
+        }
+
+        // 5. 카메라를 배 조종 시점으로 이동
+        if (mainCameraTransform != null && cameraPosition != null)
+        {
+            // 나중에 복구하기 위해 현재 카메라 상태 저장
+            originalCameraParent = mainCameraTransform.parent;
+            originalCameraLocalPos = mainCameraTransform.localPosition;
+            originalCameraLocalRot = mainCameraTransform.localRotation;
+
+            // 카메라를 cameraPosition의 자식으로 만들고 위치/회전 맞추기
+            mainCameraTransform.SetParent(cameraPosition);
+            mainCameraTransform.position = cameraPosition.position;
+            mainCameraTransform.rotation = cameraPosition.rotation;
         }
 
         Debug.Log("배에 탑승했습니다!");
@@ -134,6 +162,14 @@ public class BoatController : MonoBehaviour
         if (playerMovement != null)
         {
             playerMovement.canMove = true;
+        }
+
+        // 5. 카메라를 원래 상태로 복구
+        if (mainCameraTransform != null && cameraPosition != null)
+        {
+            mainCameraTransform.SetParent(originalCameraParent);
+            mainCameraTransform.localPosition = originalCameraLocalPos;
+            mainCameraTransform.localRotation = originalCameraLocalRot;
         }
 
         Debug.Log("배에서 하차했습니다!");
