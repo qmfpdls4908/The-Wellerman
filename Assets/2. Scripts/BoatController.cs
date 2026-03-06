@@ -15,6 +15,7 @@ public class BoatController : MonoBehaviour
     [Header("참조 (인스펙터에서 할당)")]
     public Transform playerTransform;       // 플레이어 Transform
     public PlayerMovement playerMovement;   // 플레이어 이동 스크립트
+    public Animator PlayerAnimator;
     public Rigidbody boatRigidbody;         // 배의 Rigidbody
 
     // === 내부 상태 ===
@@ -48,6 +49,7 @@ public class BoatController : MonoBehaviour
         // 탑승 중: 플레이어 위치를 seatPosition에 동기화
         if (playerCharacterController != null)
         {
+            PlayerAnimator.SetBool("isSit", true);
             // CharacterController를 비활성화한 상태이므로 Transform 직접 이동
             playerTransform.position = seatPosition.position;
             playerTransform.rotation = seatPosition.rotation;
@@ -74,7 +76,8 @@ public class BoatController : MonoBehaviour
         // E키로 하차 (탑승 후 약간의 딜레이를 주어 같은 프레임 입력 처리를 방지)
         if (Input.GetKeyDown(KeyCode.E) && Time.time > boardTime + 0.1f)
         {
-            ExitBoat();
+            PlayerAnimator.SetBool("isSit", false);
+            Invoke("ExitBoat", 3f);
         }
     }
 
